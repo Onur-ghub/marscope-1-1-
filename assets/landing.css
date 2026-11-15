@@ -1,0 +1,79 @@
+/* MARSCOPE astronaut-visor landing screen. Same typefaces as the main app (Inter, JetBrains Mono). */
+:root {
+  --v-bg: #171A1E; --v-panel: #22282E; --v-accent: #B76E45; --v-text: #E6E8E9;
+  --v-muted: #9AA5AC; --v-line: rgba(255,255,255,0.12);
+}
+html, body, [class*="css"], .stApp { font-family: 'Inter', 'Segoe UI', sans-serif; }
+
+/* Landing is a single screen: no sidebar, header or toolbar */
+section[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], header[data-testid="stHeader"],
+[data-testid="stToolbar"], [data-testid="stDecoration"] { display: none !important; }
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] { background: var(--v-bg) !important; }
+[data-testid="stMainBlockContainer"], .block-container { padding-top: 0 !important; max-width: 100% !important; }
+
+/* ---- scene: real CTX orthoimage of Jezero laid out as ground in perspective ---- */
+.visor-scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--v-bg); }
+.visor-sky { position: absolute; inset: 0 0 58% 0;
+  background: linear-gradient(180deg, #1b1d21 0%, #3a2c26 70%, #6b4a39 100%); }
+.visor-ground { position: absolute; left: -30%; right: -30%; top: 42%; height: 150%;
+  background: url('/app/static/landing_terrain.jpg') center 20% / cover no-repeat;
+  transform-origin: 50% 0; transform: perspective(900px) rotateX(68deg);
+  filter: sepia(.55) saturate(1.5) hue-rotate(-12deg) brightness(.62) contrast(1.05); }
+.visor-haze { position: absolute; left: 0; right: 0; top: 34%; height: 30%;
+  background: linear-gradient(180deg, rgba(107,74,57,0) 0%, rgba(120,82,62,.55) 45%, rgba(23,26,30,0) 100%); }
+
+/* ---- visor: soft curved edge, thin corner brackets, a faint centre reticle ---- */
+.visor-frame { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  border-radius: 46% / 30%; box-shadow: 0 0 0 100vmax rgba(10,11,13,.72), inset 0 0 90px 30px rgba(10,11,13,.55);
+  margin: 1.2vh 1.2vw; }
+.visor-frame .c { position: fixed; width: 28px; height: 28px; border: 1px solid var(--v-line); border-color: rgba(230,232,233,.35); }
+.visor-frame .tl { top: 4.5vh; left: 6vw; border-right: 0; border-bottom: 0; }
+.visor-frame .tr { top: 4.5vh; right: 6vw; border-left: 0; border-bottom: 0; }
+.visor-frame .bl { bottom: 4.5vh; left: 6vw; border-right: 0; border-top: 0; }
+.visor-frame .br { bottom: 4.5vh; right: 6vw; border-left: 0; border-top: 0; }
+.visor-reticle { position: fixed; left: 50%; top: 42%; width: 120px; height: 1px; margin-left: -60px;
+  background: linear-gradient(90deg, transparent, rgba(230,232,233,.22) 30%, transparent 45%, transparent 55%, rgba(230,232,233,.22) 70%, transparent); }
+
+.hud-readout { position: fixed; z-index: 2; top: calc(4.5vh + 40px); font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem; color: var(--v-text); line-height: 1.7; }
+.hud-readout span { display: inline-block; min-width: 92px; color: var(--v-muted); font-family: 'Inter', sans-serif;
+  font-size: .68rem; letter-spacing: .04em; }
+.hud-readout.left { left: calc(6vw + 4px); }
+.hud-readout.right { right: calc(6vw + 4px); text-align: right; }
+.hud-readout.right span { min-width: 0; margin-right: .6rem; }
+.visor-credit { position: fixed; z-index: 2; bottom: calc(4.5vh + 6px); left: 50%; transform: translateX(-50%);
+  width: min(88vw, 760px); text-align: center; font-size: .66rem; color: var(--v-muted); }
+
+/* ---- destination panel: the focus of the screen ---- */
+.st-key-visor_panel { position: relative; z-index: 3; width: min(520px, 92vw); margin: 23vh auto 14vh auto;
+  padding: 28px 30px 24px; background: rgba(34,40,46,.72); border: 1px solid var(--v-line); border-radius: 4px;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); gap: .55rem !important; }
+.visor-brand { font-size: 1.75rem; font-weight: 700; letter-spacing: .22em; color: var(--v-text); line-height: 1.1; }
+.visor-tag { font-size: .8rem; color: var(--v-muted); letter-spacing: .06em; margin-bottom: 1.1rem; }
+.visor-label { display: block; font-size: .72rem; font-weight: 600; letter-spacing: .14em; color: var(--v-accent);
+  text-transform: uppercase; margin-bottom: -.7rem; }
+.st-key-visor_panel div[data-baseweb="select"] > div { background: rgba(23,26,30,.85); border: 1px solid rgba(255,255,255,.22);
+  border-radius: 3px; min-height: 48px; font-size: 1rem; }
+.st-key-visor_panel div[data-baseweb="select"] > div:focus-within { border-color: var(--v-accent); box-shadow: 0 0 0 1px var(--v-accent); }
+.st-key-visor_panel .stMarkdown, .st-key-visor_panel [data-testid="stMarkdownContainer"] { margin-bottom: 0 !important; }
+.visor-start { font-size: .76rem; color: var(--v-muted); padding: .1rem 0 .35rem; }
+.visor-start b { color: var(--v-text); font-weight: 500; }
+.st-key-visor_panel button[kind="primary"] { background: var(--v-accent); border: 0; border-radius: 3px; min-height: 46px;
+  color: #fff; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; font-size: .82rem; }
+.st-key-visor_panel button[kind="primary"]:hover { background: #c57a50; }
+.st-key-visor_panel button[kind="primary"]:disabled { background: #5b4033; color: #d9c4b8; }
+.visor-error { font-size: .8rem; color: #f2b8a0; border-left: 2px solid var(--v-accent); padding: .3rem .6rem; }
+.visor-stages { font-family: 'JetBrains Mono', monospace; font-size: .74rem; letter-spacing: .06em; line-height: 1.9; }
+.visor-stages b { display: inline-block; width: 1.3rem; }
+.visor-stages .st-done { color: var(--v-muted); }
+.visor-stages .st-active { color: var(--v-text); }
+.visor-stages .st-todo { color: rgba(154,165,172,.45); }
+.visor-stage-detail { font-family: 'Inter', sans-serif; color: var(--v-muted); font-size: .74rem; letter-spacing: 0; margin-top: .2rem; }
+
+@media (max-width: 760px) {
+  .hud-readout { display: none; }
+  .st-key-visor_panel { margin-top: 14vh; padding: 22px 18px; }
+  .visor-frame .c { display: none; }
+  .visor-frame { border-radius: 0; margin: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

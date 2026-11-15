@@ -1,0 +1,72 @@
+{
+  "provenance": {
+    "elevation": {
+      "kind": "observation",
+      "title": "MRO CTX stereo DTM mosaic (USGS ARD, absolutely controlled to MGS MOLA)",
+      "source": "USGS Astrogeology Science Center, Analysis Ready Data (CC0)",
+      "items": [
+        "F05_037818_1977_XN_17N282W__F04_037330_2008_XN_20N282W",
+        "D22_035629_1987_XN_18N282W__D21_035563_1987_XN_18N282W",
+        "K21_061673_1987_XN_18N283W__K21_061739_1987_XN_18N283W"
+      ],
+      "urls": [
+        "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/F05_037818_1977_XN_17N282W__F04_037330_2008_XN_20N282W/F05_037818_1977_XN_17N282W__F04_037330_2008_XN_20N282W_dtm.tif",
+        "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/D22_035629_1987_XN_18N282W__D21_035563_1987_XN_18N282W/D22_035629_1987_XN_18N282W__D21_035563_1987_XN_18N282W_dtm.tif",
+        "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/K21_061673_1987_XN_18N283W__K21_061739_1987_XN_18N283W/K21_061673_1987_XN_18N283W__K21_061739_1987_XN_18N283W_dtm.tif"
+      ],
+      "native_resolution": "20 m/px (resampled to ~59 m/px for analysis)",
+      "notes": "Heights in metres relative to the Mars aeroid. Vertical offsets between overlapping DTMs removed by median differencing. Pixels outside all DTM footprints are gap-filled by nearest-neighbour + smoothing and flagged.",
+      "fetched_at": "2026-11-08T18:06:51Z",
+      "snapshot_note": "Bundled snapshot of the live USGS ARD download"
+    },
+    "ctx_image": {
+      "kind": "observation",
+      "title": "MRO CTX orthoimages co-registered with the DTMs",
+      "source": "USGS Astrogeology ARD (CC0); MRO CTX: NASA/JPL-Caltech/MSSS",
+      "urls": [
+        "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/F05_037818_1977_XN_17N282W__F04_037330_2008_XN_20N282W/F05_037818_1977_XN_17N282W__F04_037330_2008_XN_20N282W_orthoimage.tif",
+        "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/D22_035629_1987_XN_18N282W__D21_035563_1987_XN_18N282W/D22_035629_1987_XN_18N282W__D21_035563_1987_XN_18N282W_orthoimage.tif",
+        "https://astrogeo-ard.s3-us-west-2.amazonaws.com/mars/mro/ctx/controlled/usgs/K21_061673_1987_XN_18N283W__K21_061739_1987_XN_18N283W/K21_061673_1987_XN_18N283W__K21_061739_1987_XN_18N283W_orthoimage.tif"
+      ],
+      "native_resolution": "~6 m/px (resampled to ~30 m/px)",
+      "fetched_at": "2026-11-08T18:06:51Z"
+    },
+    "themis_day": {
+      "kind": "observation",
+      "title": "Mars Odyssey THEMIS daytime IR controlled mosaic, MC-13 Syrtis Major",
+      "source": "USGS Astrogeology ARD; THEMIS: NASA/JPL-Caltech/ASU",
+      "urls": [
+        "https://astrogeo-ard.s3.us-west-2.amazonaws.com/mars/mo/themis/controlled_mosaics/mc13_syrtis_major_dir/mc13_syrtis_major_dir.tif"
+      ],
+      "native_resolution": "100 m/px",
+      "notes": "8-bit stretched brightness; tracks relative daytime surface temperature (dominated by slope/albedo). NOT calibrated temperature.",
+      "fetched_at": "2026-11-08T18:06:51Z"
+    },
+    "themis_night": {
+      "kind": "observation",
+      "title": "Mars Odyssey THEMIS nighttime IR controlled mosaic, MC-13 Syrtis Major",
+      "source": "USGS Astrogeology ARD; THEMIS: NASA/JPL-Caltech/ASU",
+      "urls": [
+        "https://astrogeo-ard.s3.us-west-2.amazonaws.com/mars/mo/themis/controlled_mosaics/mc13_syrtis_major_nir/mc13_syrtis_major_nir.tif"
+      ],
+      "native_resolution": "100 m/px",
+      "notes": "8-bit stretched brightness; brighter at night = warmer = qualitatively higher thermal inertia (rockier / more indurated surfaces). NOT a calibrated thermal-inertia product.",
+      "fetched_at": "2026-11-08T18:06:51Z"
+    }
+  },
+  "fine_grid": {
+    "lon_min": 77.1,
+    "lat_min": 18.05,
+    "lon_max": 78.0,
+    "lat_max": 18.8,
+    "res": 0.001
+  },
+  "image_grid": {
+    "lon_min": 77.1,
+    "lat_min": 18.05,
+    "lon_max": 78.0,
+    "lat_max": 18.8,
+    "res": 0.0005
+  },
+  "saved_at": "2026-11-08T18:07:01Z"
+}

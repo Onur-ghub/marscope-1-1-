@@ -1,0 +1,240 @@
+{
+  "_about": "Scientific points of interest in Jezero Crater used by MARSCOPE. Positions are APPROXIMATE (typically within ~0.5-1 km), compiled from public Mars 2020 mission maps and checked by eye against the bundled CTX orthoimage; verify against official JPL traverse maps before any operational use. 'observations' are reported measurements with their sources; 'interpretations' are scientific interpretations from the cited literature; 'priority' is a MARSCOPE planning weight (expert judgement, 0-1), NOT a NASA ranking. Entries with origin 'marscope_derived' were identified by MARSCOPE from the CTX DTM and have no published name.",
+  "references": {
+    "Fassett2005": "Fassett, C. I. & Head, J. W. (2005). Fluvial sedimentary deposits on Mars: Ancient deltas in a crater lake in the Nili Fossae region. Geophysical Research Letters 32, L14201.",
+    "Ehlmann2008": "Ehlmann, B. L. et al. (2008). Clay minerals in delta deposits and organic preservation potential on Mars. Nature Geoscience 1, 355-358.",
+    "Goudge2015": "Goudge, T. A. et al. (2015). Assessing the mineralogy of the watershed and fan deposits of the Jezero crater paleolake system, Mars. JGR Planets 120, 775-808.",
+    "Horgan2020": "Horgan, B. H. N. et al. (2020). The mineral diversity of Jezero crater: Evidence for possible lacustrine carbonates on Mars. Icarus 339, 113526.",
+    "Stack2020": "Stack, K. M. et al. (2020). Photogeologic map of the Perseverance rover field site in Jezero crater constructed by the Mars 2020 Science Team. Space Science Reviews 216, 127.",
+    "Mangold2021": "Mangold, N. et al. (2021). Perseverance rover reveals an ancient delta-lake system and flood deposits at Jezero crater, Mars. Science 374, 711-717.",
+    "Farley2022": "Farley, K. A. et al. (2022). Aqueously altered igneous rocks sampled on the floor of Jezero crater, Mars. Science 377, eabo2196.",
+    "Liu2022": "Liu, Y. et al. (2022). An olivine cumulate outcrop on the floor of Jezero crater, Mars. Science 377, 1513-1519.",
+    "Hurowitz2025": "Hurowitz, J. A. et al. (2025). Redox-driven mineral and organic associations in Jezero Crater, Mars. Nature.",
+    "NASA_M2020": "NASA/JPL-Caltech Mars 2020 Perseverance mission pages and press releases (science.nasa.gov/mission/mars-2020-perseverance).",
+    "NASA_Depot": "NASA/JPL-Caltech (Dec 2022 - Jan 2023). Perseverance deposits samples at the Three Forks sample depot."
+  },
+  "pois": [
+    {
+      "id": "octavia_butler_landing",
+      "name": "Octavia E. Butler Landing (Perseverance landing site)",
+      "lat": 18.4447, "lon": 77.4508,
+      "category": "Mission landmark / crater floor",
+      "priority": 0.45,
+      "minerals_reported": ["Igneous (basaltic) floor rocks with aqueous alteration products (Máaz formation)"],
+      "water_evidence": "Floor rocks show alteration minerals indicating interaction with water after emplacement (Farley2022).",
+      "observations": [
+        {"text": "Perseverance landed here on 18 February 2021.", "source": "NASA_M2020"},
+        {"text": "Floor rocks sampled nearby are igneous and contain secondary minerals formed by aqueous alteration.", "source": "Farley2022"}
+      ],
+      "interpretations": [
+        {"text": "The crater floor here belongs to igneous units (Máaz) emplaced on the floor and later altered by water.", "source": "Farley2022"}
+      ],
+      "objectives": ["Reference site for traverse planning", "Context for floor igneous stratigraphy"],
+      "origin": "published"
+    },
+    {
+      "id": "seitah",
+      "name": "Séítah (olivine-rich floor unit)",
+      "lat": 18.428, "lon": 77.440,
+      "category": "Crater floor igneous unit",
+      "priority": 0.70,
+      "minerals_reported": ["Olivine (cumulate)", "Carbonate and other alteration phases"],
+      "water_evidence": "Olivine-rich rocks partly altered to carbonate and other secondary phases record later water-rock interaction (Liu2022).",
+      "observations": [
+        {"text": "Rover instruments characterised an olivine-rich cumulate outcrop.", "source": "Liu2022"},
+        {"text": "Séítah is mapped as a distinct unit on the crater floor, including aeolian bedforms.", "source": "Stack2020"}
+      ],
+      "interpretations": [
+        {"text": "Séítah formed by settling of olivine crystals in a thick magma body or lava lake, later altered by water.", "source": "Liu2022"}
+      ],
+      "objectives": ["Igneous petrology and crystallisation age", "Extent of aqueous alteration", "Note: sand ripples are a mobility hazard"],
+      "origin": "published"
+    },
+    {
+      "id": "kodiak",
+      "name": "Kodiak butte",
+      "lat": 18.441, "lon": 77.407,
+      "category": "Delta remnant (isolated butte)",
+      "priority": 0.75,
+      "minerals_reported": [],
+      "water_evidence": "Inclined layers seen from the rover are interpreted as delta foresets, recording deposition into a standing lake (Mangold2021).",
+      "observations": [
+        {"text": "Long-range rover images show stratified layers with inclined geometry.", "source": "Mangold2021"}
+      ],
+      "interpretations": [
+        {"text": "Kodiak is an erosional remnant of the western delta; its stratigraphy records lake-level changes.", "source": "Mangold2021"}
+      ],
+      "objectives": ["Delta stratigraphy and lake-level history", "Long-range remote sensing target"],
+      "origin": "published"
+    },
+    {
+      "id": "three_forks_depot",
+      "name": "Three Forks sample depot",
+      "lat": 18.4530, "lon": 77.4290,
+      "category": "Mission landmark",
+      "priority": 0.50,
+      "minerals_reported": [],
+      "water_evidence": "Depot holds duplicate samples including delta-front sedimentary rocks (NASA_Depot).",
+      "observations": [
+        {"text": "Perseverance placed ten sealed sample tubes on the surface here between Dec 2022 and Jan 2023 as a backup cache for Mars Sample Return.", "source": "NASA_Depot"}
+      ],
+      "interpretations": [],
+      "objectives": ["Sample-return logistics", "Avoid disturbing cached tubes (keep-out zone)"],
+      "origin": "published"
+    },
+    {
+      "id": "delta_front",
+      "name": "Delta front (Hawksbill Gap area)",
+      "lat": 18.462, "lon": 77.418,
+      "category": "Lacustrine / deltaic sedimentary rocks",
+      "priority": 0.90,
+      "minerals_reported": ["Fe/Mg smectite clays (orbital, CRISM)", "Carbonates (orbital, CRISM)", "Sulfates in fine-grained sediments (rover)"],
+      "water_evidence": "Fan-shaped sedimentary deposit at the mouth of an inlet valley, with layered fine-grained rocks deposited in a lake (Fassett2005; Mangold2021).",
+      "observations": [
+        {"text": "CRISM orbital spectra show Fe/Mg smectite and carbonate signatures in the fan deposits.", "source": "Ehlmann2008"},
+        {"text": "Orbital mineralogy of the fan resembles the watershed, consistent with transported sediment.", "source": "Goudge2015"},
+        {"text": "Rover images show layered sedimentary rocks at the delta front.", "source": "Mangold2021"}
+      ],
+      "interpretations": [
+        {"text": "The western fan is a delta built into an ancient lake; its fine-grained layers are prime targets for preserved organics and biosignatures.", "source": "Mangold2021"}
+      ],
+      "objectives": ["Characterise lake sediments and their mineralogy", "Search for preserved organic matter", "Sample fine-grained mudstones"],
+      "origin": "published"
+    },
+    {
+      "id": "delta_top_belva",
+      "name": "Delta top near Belva crater",
+      "lat": 18.490, "lon": 77.392,
+      "category": "Upper fan (fluvial deposits)",
+      "priority": 0.85,
+      "minerals_reported": ["Fe/Mg smectite and carbonate (orbital, CRISM, fan deposits)"],
+      "water_evidence": "Upper fan surfaces preserve channel deposits and coarse fluvial sediments transported by rivers into the lake (Mangold2021).",
+      "observations": [
+        {"text": "Belva is an impact crater (~0.9 km) on the fan whose walls expose fan stratigraphy; Perseverance imaged it in 2023.", "source": "NASA_M2020"},
+        {"text": "Fan deposits show smectite and carbonate signatures from orbit.", "source": "Ehlmann2008"}
+      ],
+      "interpretations": [
+        {"text": "Boulder-rich upper-fan layers may record high-energy floods late in the lake's history.", "source": "Mangold2021"}
+      ],
+      "objectives": ["Read fan stratigraphy in Belva's walls", "Sample river-transported clasts from the watershed"],
+      "origin": "published"
+    },
+    {
+      "id": "belva_crater",
+      "name": "Belva crater (rim)",
+      "lat": 18.486, "lon": 77.378,
+      "category": "Impact crater into fan deposits",
+      "priority": 0.70,
+      "minerals_reported": [],
+      "water_evidence": "Natural cross-section through the delta deposits.",
+      "observations": [
+        {"text": "Crater walls expose layered fan deposits imaged by Perseverance.", "source": "NASA_M2020"}
+      ],
+      "interpretations": [],
+      "objectives": ["Stratigraphic cross-section without drilling", "Hazard: steep inner walls - observe from rim"],
+      "origin": "published"
+    },
+    {
+      "id": "bright_angel",
+      "name": "Bright Angel / Cheyava Falls (Neretva Vallis)",
+      "lat": 18.505, "lon": 77.335,
+      "category": "Fluvial channel / altered sediments",
+      "priority": 0.95,
+      "minerals_reported": ["Fe-phosphate and Fe-sulfide associated with organic carbon in 'leopard spot' features (rover)"],
+      "water_evidence": "Mudstone in the Neretva Vallis channel deposited by water, with reaction fronts formed during later fluid interaction (Hurowitz2025).",
+      "observations": [
+        {"text": "The Cheyava Falls rock (sample 'Sapphire Canyon') shows millimetre-scale reaction fronts ('leopard spots') with Fe-phosphate and Fe-sulfide minerals and organic-carbon signals.", "source": "Hurowitz2025"}
+      ],
+      "interpretations": [
+        {"text": "The features are a POTENTIAL biosignature: they could be produced by microbial redox reactions, but abiotic explanations have not been ruled out.", "source": "Hurowitz2025"}
+      ],
+      "objectives": ["Highest-value astrobiology context", "Compare with laboratory analysis of returned samples"],
+      "origin": "published"
+    },
+    {
+      "id": "neretva_inlet",
+      "name": "Neretva Vallis inlet",
+      "lat": 18.497, "lon": 77.285,
+      "category": "Inlet river valley",
+      "priority": 0.70,
+      "minerals_reported": ["Watershed clays and olivine-carbonate transported into the fan (orbital)"],
+      "water_evidence": "A river valley that breached the western crater rim and fed the delta (Fassett2005).",
+      "observations": [
+        {"text": "Valley network enters Jezero through the western rim; visible in CTX and THEMIS images.", "source": "Fassett2005"}
+      ],
+      "interpretations": [
+        {"text": "Jezero was an open-basin lake fed by inlet valleys and drained by an outlet.", "source": "Fassett2005"}
+      ],
+      "objectives": ["River sediment provenance", "Channel-floor deposits and lake inflow history"],
+      "origin": "published"
+    },
+    {
+      "id": "margin_unit",
+      "name": "Inner-rim margin unit (carbonate-bearing)",
+      "lat": 18.455, "lon": 77.322,
+      "category": "Marginal carbonate deposits",
+      "priority": 0.85,
+      "minerals_reported": ["Carbonate (orbital, CRISM)", "Olivine (orbital)"],
+      "water_evidence": "Carbonate concentrated along the inner crater margin has been proposed to be lacustrine (shoreline) carbonate (Horgan2020).",
+      "observations": [
+        {"text": "Orbital spectra show strong carbonate signatures in a band along the inner western margin.", "source": "Horgan2020"}
+      ],
+      "interpretations": [
+        {"text": "Possibly carbonates precipitated near the lake shore, which on Earth can preserve biosignatures; alternative origins (e.g. altered olivine-rich deposits) remain possible.", "source": "Horgan2020"}
+      ],
+      "objectives": ["Test lacustrine vs non-lacustrine carbonate origin", "Biosignature preservation potential"],
+      "origin": "published"
+    },
+    {
+      "id": "witch_hazel_hill",
+      "name": "Western crater rim (Witch Hazel Hill area)",
+      "lat": 18.475, "lon": 77.285,
+      "category": "Crater rim / ancient crust",
+      "priority": 0.65,
+      "minerals_reported": [],
+      "water_evidence": "Not primarily a water target; rim rocks predate the lake.",
+      "observations": [
+        {"text": "Perseverance climbed the crater rim and began exploring this area in late 2024.", "source": "NASA_M2020"}
+      ],
+      "interpretations": [
+        {"text": "Rim rocks are expected to include ancient crust uplifted or excavated by the Jezero impact, older than the lake deposits.", "source": "NASA_M2020"}
+      ],
+      "objectives": ["Sample pre-Jezero crust", "Hazard: steep rim slopes"],
+      "origin": "published"
+    },
+    {
+      "id": "floor_crater_north",
+      "name": "Unnamed ~1.3 km crater on northern floor",
+      "lat": 18.534, "lon": 77.720,
+      "category": "Impact crater (MARSCOPE-derived)",
+      "priority": 0.40,
+      "minerals_reported": [],
+      "water_evidence": "Unknown - no published analysis used by MARSCOPE.",
+      "observations": [
+        {"text": "Circular depression with raised rim identified by MARSCOPE in the CTX DTM and orthoimage.", "source": "MARSCOPE"}
+      ],
+      "interpretations": [
+        {"text": "A natural excavation that could expose subsurface floor material (MARSCOPE hypothesis, unverified).", "source": "MARSCOPE"}
+      ],
+      "objectives": ["Remote characterisation of subsurface floor units"],
+      "origin": "marscope_derived"
+    },
+    {
+      "id": "floor_crater_east",
+      "name": "Unnamed ~1.5 km crater on eastern floor",
+      "lat": 18.339, "lon": 77.950,
+      "category": "Impact crater (MARSCOPE-derived)",
+      "priority": 0.35,
+      "minerals_reported": [],
+      "water_evidence": "Unknown - no published analysis used by MARSCOPE.",
+      "observations": [
+        {"text": "Fresh-looking bowl-shaped crater identified by MARSCOPE in the CTX DTM and THEMIS night IR (warm ejecta).", "source": "MARSCOPE"}
+      ],
+      "interpretations": [
+        {"text": "Warm nighttime ejecta suggests blocky, rock-rich material (MARSCOPE interpretation of THEMIS brightness).", "source": "MARSCOPE"}
+      ],
+      "objectives": ["Sample excavated floor material at the ejecta blanket"],
+      "origin": "marscope_derived"
+    }
+  ]
+}

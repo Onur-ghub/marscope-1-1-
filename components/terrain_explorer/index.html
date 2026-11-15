@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jezero 3D colour map</title>
+<style>
+:root{--bg:#0a0b0d;--panel:rgba(16,18,21,.84);--line:rgba(86,194,207,.2);--text:#e6ebef;--muted:#8d98a3;--faint:#5d6670;
+  --teal:#56c2cf;--blue:#8fb0d8;--lav:#b8a6e3;--sand:#e3a36f;--mars:#d9825b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font:12px/1.4 Inter,"Segoe UI",system-ui,-apple-system,sans-serif;overflow:hidden}
+#wrap{position:relative;width:100%;height:700px;border-radius:12px;overflow:hidden;background:#0d0f12;outline:none}
+#wrap:focus-visible{box-shadow:inset 0 0 0 2px var(--teal)}
+canvas{display:block}
+.panel{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;
+  backdrop-filter:blur(4px)}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+h4{margin:0 0 6px;font:600 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#left{top:10px;left:10px;width:262px;max-height:calc(100% - 90px);overflow:auto;scrollbar-width:thin}
+#modes{display:flex;flex-wrap:wrap;gap:4px}
+button,select{font:inherit;color:var(--text);background:#1c2025;border:1px solid var(--line);border-radius:7px;
+  padding:3px 8px;cursor:pointer}
+button:hover{border-color:#46505a}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+button.on{background:#25403c;border-color:var(--teal);color:#dff1ed}
+button[disabled]{opacity:.45;cursor:default}
+.tag{display:inline-block;font:600 9px "JetBrains Mono",monospace;letter-spacing:.06em;padding:1px 5px;border-radius:4px;
+  border:1px solid;margin-left:4px;vertical-align:1px}
+.tag.real{color:#9fd0b4;border-color:#4f8f7a}.tag.derived{color:var(--blue);border-color:#4d6286}
+.tag.lit{color:var(--lav);border-color:#6d5f96}.tag.sim{color:var(--sand);border-color:#8a7a5c}
+#about{color:var(--muted);margin:6px 0 4px;font-size:11.5px}
+#legend .grad{height:10px;border-radius:3px;margin:4px 0 2px}
+#legend .ends{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}
+#legend .item{display:flex;gap:6px;align-items:flex-start;padding:2px 4px;border-radius:5px;cursor:pointer;font-size:11.5px}
+#legend .item:hover{background:#22272d}
+#legend .item.dim{opacity:.4}
+#legend .sw{width:11px;height:11px;border-radius:3px;flex:none;margin-top:2px}
+.sep{height:1px;background:var(--line);margin:8px 0}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}
+.row label{color:var(--muted)}
+input[type=range]{accent-color:var(--teal)}
+#right{top:10px;right:10px;width:268px}
+#hover,#sel{font-size:11.5px}
+#hover .k,#sel .k{color:var(--faint)}
+#sel{margin-top:6px;border-top:1px solid var(--line);padding-top:6px}
+#play{left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 10px}
+#timeline{flex:1;min-width:160px}
+#hud{flex-basis:100%;display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:11.5px}
+#hud b{color:var(--text);font-weight:500}
+#simlabel{color:var(--sand);font:600 10px "JetBrains Mono",monospace;letter-spacing:.05em}
+#section{right:10px;bottom:84px;width:380px;display:none}
+#secCanvas{width:100%;height:150px;display:block}
+#secRead{color:var(--muted);font-size:11px;min-height:15px}
+#toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:#20302d;border:1px solid var(--teal);
+  color:#dff1ed;border-radius:8px;padding:5px 12px;opacity:0;transition:opacity .3s;pointer-events:none;font-size:12px}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;transform:translate(-50%,-140%);font-size:10.5px;color:#e8e2f3;white-space:nowrap;
+  text-shadow:0 1px 2px #000,0 0 3px #000}
+.lbl.reached{color:#bfe8de}
+.lbl.hl{color:#f3e3bf;font-weight:600}
+#msg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;
+  color:var(--muted)}
+#help{position:absolute;left:290px;bottom:92px;color:var(--faint);font-size:10.5px;pointer-events:none}
+body.nav #right,body.nav #section,body.nav #play,body.nav #help,body.nav .full-only{display:none!important}
+.nav-only{display:none}body.nav .nav-only{display:flex}
+body.nav #left{top:10px;width:236px;max-height:calc(100% - 120px)}
+body.nav #left.min>*:not(.lhead){display:none}
+.lhead{display:flex;justify-content:space-between;align-items:center}
+#navbadge{position:absolute;left:10px;bottom:10px;display:none;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);
+  border-radius:6px;padding:4px 9px;font:500 10.5px "JetBrains Mono",monospace;color:var(--muted)}
+body.nav #navbadge{display:flex}
+#navbadge b{color:var(--sand);font-weight:600;letter-spacing:.05em}
+#navbadge .st{color:#9fd0b4}
+@media (max-width:760px){#left{width:200px}#right{display:none}#section{width:calc(100% - 20px)}#help{display:none}}
+
+/* ---- astronaut HUD skin (visual only) ---- */
+#wrap{border-radius:3px;background:#08090b}
+.panel{border-radius:2px;background-image:
+  linear-gradient(var(--teal),var(--teal)),linear-gradient(var(--teal),var(--teal)),
+  linear-gradient(var(--teal),var(--teal)),linear-gradient(var(--teal),var(--teal));
+  background-size:9px 1px,1px 9px,9px 1px,1px 9px;background-repeat:no-repeat;
+  background-position:0 0,0 0,100% 100%,100% 100%}
+h4{font-family:"JetBrains Mono",ui-monospace,monospace;color:#8fd3dc;letter-spacing:.14em}
+button,select{background:rgba(86,194,207,.04);border-radius:2px;transition:border-color .2s,background .2s,box-shadow .2s}
+button:hover{border-color:rgba(86,194,207,.55);background:rgba(86,194,207,.09)}
+button.on{background:rgba(86,194,207,.14);border-color:var(--teal);color:#eef7f8;box-shadow:0 0 8px rgba(86,194,207,.25)}
+#legend .item:hover{background:rgba(86,194,207,.07)}
+@media (prefers-reduced-motion:reduce){button,select{transition:none}}
+</style></head>
+<body>
+<div id="wrap" tabindex="0" role="application"
+     aria-label="Interactive 3D colour map of Jezero crater. Drag to rotate, shift-drag or right-drag to pan, scroll to zoom, click to select a location.">
+  <div id="labels"></div>
+  <div class="panel" id="left">
+    <div class="lhead"><h4>Colour mode</h4><button id="btnMin" class="nav-only" title="Collapse or expand this panel" aria-expanded="true" style="padding:0 7px">–</button></div>
+    <div id="modes" role="group" aria-label="Colour mode"></div>
+    <div id="about"></div>
+    <div id="legend"></div>
+    <div class="sep full-only"></div>
+    <h4 class="full-only">Terrain animations</h4>
+    <div class="row full-only">
+      <button id="btnReveal" title="Raise the terrain from flat to the chosen vertical exaggeration">Reveal relief</button>
+      <button id="btnTour" title="Cycle through every data layer of the same region">Tour layers</button>
+      <button id="btnCompare" title="Split the map between two layers">Compare</button>
+    </div>
+    <div class="row"><label for="exag">Vertical ×</label><input id="exag" type="range" min="1" max="8" step="0.5" value="3">
+      <span id="exagv" class="mono">3</span></div>
+    <div id="cmp" style="display:none">
+      <div class="row"><label for="modeB">Right of split</label><select id="modeB"></select></div>
+      <div class="row"><input id="split" type="range" min="0" max="1000" value="500" style="flex:1" aria-label="Split position">
+        <button id="btnSweep" title="Animate the split across the region">Sweep</button></div>
+    </div>
+    <div class="row nav-only"><label><input type="checkbox" id="chkFollowNav"> Follow simulated rover</label></div>
+    <div class="row">
+      <label><input type="checkbox" id="chkLabels" checked> Feature names</label>
+      <label id="travWrap" style="display:none"><input type="checkbox" id="chkTrav" checked> Real traverse</label>
+    </div>
+    <div class="row"><button id="btnReset" title="Frame the selected route">Route view</button><button id="btnWhole" title="The whole study area">Whole crater</button><button id="btnTop">Top view</button></div>
+  </div>
+  <div class="panel" id="right" aria-live="polite">
+    <h4>Cursor</h4><div id="hover"><span class="k">Move over the terrain to read coordinates.</span></div>
+    <div id="sel"><span class="k">Click the terrain or a feature pin to select it.</span></div>
+  </div>
+  <div class="panel" id="section">
+    <h4>Cross-section <span class="tag derived">DTM</span>
+      <button id="btnScan" style="float:right;margin-top:-3px">▶ Scan</button></h4>
+    <canvas id="secCanvas"></canvas>
+    <div id="secRead" class="mono"></div>
+  </div>
+  <div class="panel" id="play">
+    <button id="btnPlay" title="Play or pause the simulated rover playback">▶ Play</button>
+    <button id="btnRst" title="Back to the start of the route">⟲ Reset</button>
+    <label for="speed" style="color:var(--muted)">Speed</label>
+    <select id="speed" aria-label="Playback speed">
+      <option value="0.5">0.5 sol/s</option><option value="1" selected>1 sol/s</option>
+      <option value="2">2 sol/s</option><option value="4">4 sol/s</option><option value="8">8 sol/s</option></select>
+    <input id="timeline" type="range" min="0" max="1000" value="0" aria-label="Playback timeline">
+    <label><input type="checkbox" id="chkFollow"> Follow rover</label>
+    <div id="hud"><span id="simlabel">SIMULATED · illustrative playback along the planned route, not mission telemetry</span></div>
+  </div>
+  <div id="navbadge" aria-live="polite"><b>SIMULATED</b><span>rover position · no live rover link</span><span class="st" id="navst"></span></div>
+  <div id="help">Drag: rotate · Shift/right-drag: pan · Scroll: zoom · Click: select</div>
+  <div id="toast" role="status"></div>
+  <div id="msg"></div>
+</div>
+<script>
+(function(){
+"use strict";
+var wrap=document.getElementById('wrap'), H=700;
+function post(type,extra){var m={isStreamlitMessage:true,type:type};for(var k in extra)m[k]=extra[k];window.parent.postMessage(m,'*');}
+function setValue(v){post('streamlit:setComponentValue',{value:v,dataType:'json'});}
+function setHeight(h){H=h;wrap.style.height=h+'px';post('streamlit:setFrameHeight',{height:h});}
+var pending=null, threeReady=false;
+window.addEventListener('message',function(e){var d=e.data;if(!d||d.type!=='streamlit:render')return;
+  if(threeReady)onRender(d.args);else pending=d.args;});
+post('streamlit:componentReady',{apiVersion:1});
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function load(src,ok,bad){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=bad;document.head.appendChild(s);}
+function fail(t){var m=document.getElementById('msg');m.style.display='flex';m.innerHTML=t;}
+load('three.min.js',boot,function(){load('/app/static/vendor/three.min.js',boot,function(){load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',boot,
+  function(){fail('The 3D library (three.js) could not be loaded. The 2D map and charts still work.');});});});
+
+// ---------------------------------------------------------------- helpers
+function dec(b64,Type){var bin=atob(b64),n=bin.length,u=new Uint8Array(n);for(var i=0;i<n;i++)u[i]=bin.charCodeAt(i);
+  return new Type(u.buffer);}
+function hex(h){var n=parseInt(h.slice(1),16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
+function ramp(stops,t){t=Math.max(0,Math.min(1,t));for(var i=1;i<stops.length;i++){if(t<=stops[i][0]){
+  var a=stops[i-1],b=stops[i],k=(t-a[0])/((b[0]-a[0])||1),A=hex(a[1]),B=hex(b[1]);
+  return[A[0]+(B[0]-A[0])*k,A[1]+(B[1]-A[1])*k,A[2]+(B[2]-A[2])*k];}}return hex(stops[stops.length-1][1]);}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function fmt(n,d){return Number(n).toLocaleString('en-US',{maximumFractionDigits:d||0,minimumFractionDigits:d||0});}
+var ELEV=[[0,'#1d2a3a'],[.25,'#2f5560'],[.5,'#5f8f84'],[.75,'#c2b088'],[1,'#efe3c8']];
+var SCI=[[0,'#23262c'],[.4,'#4a4f6e'],[.7,'#8f80c4'],[1,'#f0dfb0']];
+var SLOPE=[[0,'#4f7d74'],[8,'#9bb58f'],[15,'#d9c39c'],[25,'#c98b6b'],[35,'#8e3f3a']];
+function gradCss(st,max){return 'linear-gradient(90deg,'+st.map(function(s){return s[1]+' '+(s[0]/(max||1)*100)+'%';}).join(',')+')';}
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toast.h);
+  toast.h=setTimeout(function(){el.style.opacity=0;},2600);}
+
+// ---------------------------------------------------------------- state
+var T=null,S=null,dataId=null,E,SL,CL,SC,GEO,N,nx,ny;
+var renderer,scene3,camera,world,terrainGeo,terrainMat,terrainMesh,tex=null,overlay,routeGroup,pinGroup,secGroup,travGroup;
+var mode='elevation',modeB='slope',compare=false,split=.5,isolate=null,colAnim=null,colors,fromCol,toCol;
+var exag=3,reveal=null,tour=null,sweep=null,focusN=null;
+var orbit={az:.55,el:.9,dist:64,target:null},camAnim=null;
+var pins=[],labels=[],selMarker=null,rover=null,trail=null,trailPos=null;
+var play={route:null,d:0,total:0,on:false,speed:1,rate:0,stops:[],reached:{},last:0,follow:false};
+var active=true,introDone=false;
+var section=null,scan=null;
+
+function boot(){
+  if(!window.THREE){fail('three.js unavailable.');return;}
+  try{renderer=new THREE.WebGLRenderer({antialias:true});}catch(e){fail('WebGL is not available in this browser, so the 3D colour map cannot be drawn. The 2D map and charts still work.');return;}
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  wrap.insertBefore(renderer.domElement,wrap.firstChild);
+  scene3=new THREE.Scene();scene3.background=new THREE.Color(0x0d0f12);
+  camera=new THREE.PerspectiveCamera(42,1,.05,600);
+  scene3.add(new THREE.AmbientLight(0xffffff,.55));
+  var sun=new THREE.DirectionalLight(0xffffff,.75);sun.position.set(-40,60,-30);scene3.add(sun);
+  world=new THREE.Group();scene3.add(world);overlay=new THREE.Group();scene3.add(overlay);
+  orbit.target=new THREE.Vector3();ray=new THREE.Raycaster();mouse=new THREE.Vector2();
+  threeReady=true;bindUI();resize();requestAnimationFrame(loop);
+  if(pending){onRender(pending);pending=null;}
+}
+
+function onRender(a){
+  if(a.scene&&a.scene.ui==='nav'){document.body.classList.add('nav');wrap.style.height='100vh';wrap.style.borderRadius='12px';
+    if(H!==a.height){H=a.height;post('streamlit:setFrameHeight',{height:a.height||760});}}
+  else setHeight(a.height||700);
+  resize();
+  if(a.data&&a.data.id!==dataId){buildTerrain(a.data);dataId=a.data.id;}
+  if(a.scene)applyScene(a.scene);
+}
+
+// ---------------------------------------------------------------- terrain
+function vx(j){return (T.lon0+j*T.dlon-T.lon_c)*T.kx;}
+function vz(i){return -(T.lat0+i*T.dlat-T.lat_c)*T.ky;}
+function xOf(lon){return (lon-T.lon_c)*T.kx;} function zOf(lat){return -(lat-T.lat_c)*T.ky;}
+function lonOf(x){return T.lon_c+x/T.kx;} function latOf(z){return T.lat_c-z/T.ky;}
+function hy(m){return (m-T.zmid)/1000;}
+function idxAt(lat,lon){var j=Math.round((lon-T.lon0)/T.dlon),i=Math.round((lat-T.lat0)/T.dlat);
+  if(i<0||j<0||i>=ny||j>=nx)return -1;return i*nx+j;}
+function elevAt(lat,lon){var fj=(lon-T.lon0)/T.dlon,fi=(lat-T.lat0)/T.dlat;fj=Math.max(0,Math.min(nx-1.001,fj));
+  fi=Math.max(0,Math.min(ny-1.001,fi));var j=Math.floor(fj),i=Math.floor(fi),a=fj-j,b=fi-i,k=i*nx+j;
+  return E[k]*(1-a)*(1-b)+E[k+1]*a*(1-b)+E[k+nx]*(1-a)*b+E[k+nx+1]*a*b;}
+function yAt(lat,lon,lift){return (hy(elevAt(lat,lon))+(lift||0))*world.scale.y;}
+
+function buildTerrain(d){
+  T=d;nx=d.nx;ny=d.ny;N=nx*ny;E=dec(d.elev,Int16Array);SL=dec(d.slope,Uint8Array);CL=dec(d.cls,Uint8Array);
+  SC=dec(d.sci,Uint8Array);GEO=dec(d.geo,Uint8Array);
+  if(terrainMesh){world.remove(terrainMesh);terrainGeo.dispose();}
+  var pos=new Float32Array(N*3),uv=new Float32Array(N*2),k=0;
+  for(var i=0;i<ny;i++)for(var j=0;j<nx;j++,k++){pos[k*3]=vx(j);pos[k*3+1]=hy(E[k]);pos[k*3+2]=vz(i);
+    uv[k*2]=j/(nx-1);uv[k*2+1]=1-i/(ny-1);}
+  var idx=new (N>65535?Uint32Array:Uint16Array)((nx-1)*(ny-1)*6),q=0;
+  for(i=0;i<ny-1;i++)for(j=0;j<nx-1;j++){var a=i*nx+j,b=a+1,c=a+nx,e=c+1;idx[q++]=a;idx[q++]=c;idx[q++]=b;idx[q++]=b;idx[q++]=c;idx[q++]=e;}
+  terrainGeo=new THREE.BufferGeometry();terrainGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  terrainGeo.setAttribute('uv',new THREE.BufferAttribute(uv,2));colors=new Float32Array(N*3);
+  terrainGeo.setAttribute('color',new THREE.BufferAttribute(colors,3));terrainGeo.setIndex(new THREE.BufferAttribute(idx,1));
+  terrainGeo.computeVertexNormals();
+  terrainMat=new THREE.MeshLambertMaterial({vertexColors:true,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
+  terrainMesh=new THREE.Mesh(terrainGeo,terrainMat);world.add(terrainMesh);
+  world.scale.y=exag;
+  tex=d.tex?new THREE.TextureLoader().load(d.tex):null;
+  if(!tex)document.querySelector('[data-mode=imagery]')&&(document.querySelector('[data-mode=imagery]').disabled=true);
+  buildModeButtons();setMode(mode,true);resetView(true);
+  if(d.synthetic)toast('SYNTHETIC demonstration terrain: real data could not be loaded');
+}
+
+function colorOf(m,k){
+  switch(m){
+    case 'elevation':return ramp(ELEV,(E[k]-T.elev_lo)/((T.elev_hi-T.elev_lo)||1));
+    case 'slope':{var s=SL[k],st=SLOPE;return ramp(st.map(function(x){return[x[0]/35,x[1]];}),s/35);}
+    case 'class':{var it=T.legend['class'].find(function(c){return c[0]===CL[k];});var c=hex(it?it[2]:'#555555');
+      return dim(c,isolate!==null&&CL[k]!==isolate);}
+    case 'geology':{var g=GEO[k];if(!g)return dim([.29,.31,.33],isolate!==null);
+      return dim(hex(T.legend.geology[g-1][2]),isolate!==null&&g!==isolate);}
+    case 'science':return ramp(SCI,SC[k]/100);
+    default:return[1,1,1];
+  }
+}
+function dim(c,yes){return yes?[c[0]*.28+.04,c[1]*.28+.04,c[2]*.28+.04]:c;}
+function targetColors(){var out=new Float32Array(N*3),sx=compare?(xMin()+(xMax()-xMin())*split):Infinity;
+  for(var i=0,k=0;i<ny;i++)for(var j=0;j<nx;j++,k++){var c=colorOf(vx(j)<sx?mode:modeB,k);out[k*3]=c[0];out[k*3+1]=c[1];out[k*3+2]=c[2];}
+  return out;}
+function xMin(){return vx(0);} function xMax(){return vx(nx-1);}
+function recolor(animate){
+  toCol=targetColors();
+  if(mode==='imagery'&&tex&&!compare){terrainMat.map=tex;terrainMat.needsUpdate=true;}
+  if(!animate||reduce){colors.set(toCol);finishColor();return;}
+  fromCol=new Float32Array(colors);colAnim={t0:performance.now(),dur:650};
+}
+function finishColor(){colAnim=null;if(!(mode==='imagery'&&!compare)&&terrainMat.map){terrainMat.map=null;terrainMat.needsUpdate=true;}
+  terrainGeo.attributes.color.needsUpdate=true;updateSplitPlane();}
+function stepColor(now){if(!colAnim)return;var t=Math.min(1,(now-colAnim.t0)/colAnim.dur),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  for(var i=0;i<colors.length;i++)colors[i]=fromCol[i]+(toCol[i]-fromCol[i])*e;terrainGeo.attributes.color.needsUpdate=true;
+  if(t>=1)finishColor();}
+
+// ---------------------------------------------------------------- modes & legend
+function modeInfo(id){return T.modes.find(function(m){return m.id===id;});}
+function tagHtml(t){return '<span class="tag '+t+'">'+{real:'REAL DATA',derived:'DERIVED',lit:'LITERATURE',sim:'SIMULATED'}[t]+'</span>';}
+function buildModeButtons(){
+  var box=document.getElementById('modes');box.innerHTML='';
+  T.modes.forEach(function(m){var b=document.createElement('button');b.textContent=m.label;b.dataset.mode=m.id;
+    b.setAttribute('aria-pressed','false');if(m.id==='imagery'&&!T.tex)b.disabled=true;
+    b.onclick=function(){stopTour();setMode(m.id);};box.appendChild(b);});
+  var sb=document.getElementById('modeB');sb.innerHTML='';
+  T.modes.filter(function(m){return m.id!=='imagery';}).forEach(function(m){var o=document.createElement('option');
+    o.value=m.id;o.textContent=m.label;sb.appendChild(o);});sb.value=modeB;
+}
+function setMode(id,instant){
+  if(compare&&id==='imagery'){toast('CTX imagery cannot be split with a data layer; compare turned off');setCompare(false);}
+  mode=id;isolate=null;
+  document.querySelectorAll('#modes button').forEach(function(b){var on=b.dataset.mode===id;b.classList.toggle('on',on);
+    b.setAttribute('aria-pressed',on?'true':'false');});
+  var m=modeInfo(id);document.getElementById('about').innerHTML=esc(m.about)+tagHtml(m.tag);
+  drawLegend();recolor(!instant);
+}
+function drawLegend(){
+  var L=document.getElementById('legend'),h='';
+  if(mode==='elevation')h='<div class="grad" style="background:'+gradCss(ELEV,1)+'"></div><div class="ends mono"><span>'+
+    fmt(T.elev_lo)+' m</span><span>'+fmt(T.elev_hi)+' m</span></div><div class="ends"><span>low (crater floor)</span><span>high (rim, fan)</span></div>';
+  else if(mode==='slope')h='<div class="grad" style="background:'+gradCss(SLOPE,35)+'"></div><div class="ends mono"><span>0°</span><span>'+
+    T.caution+'° caution</span><span>'+T.max_slope+'° limit</span><span>35°+</span></div>';
+  else if(mode==='science')h='<div class="grad" style="background:'+gradCss(SCI,1)+'"></div><div class="ends mono"><span>0</span><span>50</span><span>100</span></div>';
+  else if(mode==='imagery')h='<div class="ends"><span>Greyscale CTX orthoimage; brightness is surface albedo.</span></div>';
+  else{var items=T.legend[mode==='class'?'class':'geology'];
+    h=items.map(function(it){return '<div class="item'+(isolate!==null&&isolate!==it[0]?' dim':'')+'" data-v="'+it[0]+'" role="button" tabindex="0" title="Click to isolate"><span class="sw" style="background:'+it[2]+'"></span><span>'+esc(it[1])+'</span></div>';}).join('')+
+      '<div class="ends" style="margin-top:3px"><span>Click an entry to isolate it.</span></div>';}
+  L.innerHTML=h;
+  L.querySelectorAll('.item').forEach(function(el){var f=function(){var v=+el.dataset.v;isolate=(isolate===v)?null:v;drawLegend();recolor(true);};
+    el.onclick=f;el.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();f();}};});
+}
+
+// ---------------------------------------------------------------- compare / sweep / tour / reveal
+var splitPlane=null;
+function setCompare(on){compare=on;document.getElementById('btnCompare').classList.toggle('on',on);
+  document.getElementById('cmp').style.display=on?'block':'none';
+  if(on&&mode==='imagery')setMode('elevation',true);
+  if(on&&modeB===mode){modeB=mode==='slope'?'elevation':'slope';document.getElementById('modeB').value=modeB;}
+  recolor(true);}
+function updateSplitPlane(){
+  if(!splitPlane){splitPlane=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0x7fb8ae,transparent:true,
+    opacity:.55,side:THREE.DoubleSide,depthWrite:false}));scene3.add(splitPlane);}
+  splitPlane.visible=compare;if(!compare)return;
+  var d=(T.ny-1)*Math.abs(T.dlat)*T.ky;splitPlane.scale.set(d,1.4,1);splitPlane.rotation.y=Math.PI/2;
+  splitPlane.position.set(xMin()+(xMax()-xMin())*split,hy(T.elev_hi)*world.scale.y*.5,0);
+}
+function startSweep(){split=0;sweep={t0:performance.now(),dur:reduce?1:3800};}
+function stepSweep(now){if(!sweep)return;var t=Math.min(1,(now-sweep.t0)/sweep.dur);split=t;
+  document.getElementById('split').value=Math.round(t*1000);colors.set(targetColors());terrainGeo.attributes.color.needsUpdate=true;
+  updateSplitPlane();if(t>=1)sweep=null;}
+var TOUR=['elevation','slope','class','geology','science','imagery'];
+function startTour(){if(compare)setCompare(false);tour={i:Math.max(0,TOUR.indexOf(mode)),t0:performance.now()};
+  document.getElementById('btnTour').classList.add('on');document.getElementById('btnTour').textContent='Stop tour';setMode(TOUR[tour.i]);}
+function stopTour(){if(!tour)return;tour=null;var b=document.getElementById('btnTour');b.classList.remove('on');b.textContent='Tour layers';}
+function stepTour(now){if(!tour||now-tour.t0<3400)return;tour.t0=now;tour.i=(tour.i+1)%TOUR.length;
+  if(TOUR[tour.i]==='imagery'&&!T.tex)tour.i=0;setMode(TOUR[tour.i]);}
+function startReveal(){reveal={t0:performance.now(),dur:reduce?1:2600};world.scale.y=0.001;}
+function stepReveal(now){if(!reveal)return;var t=Math.min(1,(now-reveal.t0)/reveal.dur),e=1-Math.pow(1-t,3);
+  world.scale.y=Math.max(.001,exag*e);if(t>=1)reveal=null;}
+
+// ---------------------------------------------------------------- scene overlays
+function lineFrom(pts,color,opacity,lift){var a=new Float32Array(pts.length*3);
+  pts.forEach(function(p,i){a[i*3]=xOf(p[1]);a[i*3+1]=hy(p.length>2&&p[2]!=null?p[2]:elevAt(p[0],p[1]))+(lift||.02);a[i*3+2]=zOf(p[0]);});
+  var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(a,3));
+  return new THREE.Line(g,new THREE.LineBasicMaterial({color:color,transparent:opacity<1,opacity:opacity}));}
+function clearGroup(g){if(!g)return;while(g.children.length){var c=g.children.pop();c.geometry&&c.geometry.dispose();}}
+function pin(lat,lon,color,size,data){var g=new THREE.Group();
+  var stick=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.9,6),new THREE.MeshBasicMaterial({color:0xd8dde2}));stick.position.y=.45;
+  var head=new THREE.Mesh(new THREE.SphereGeometry(size||.2,14,10),new THREE.MeshLambertMaterial({color:color,emissive:new THREE.Color(color).multiplyScalar(.25)}));
+  head.position.y=.95;head.userData=data||{};g.add(stick);g.add(head);g.userData={lat:lat,lon:lon,head:head,base:color};overlay.add(g);return g;}
+
+function applyScene(s){
+  var prevSel=S&&S.selected,prevRouteKey=play.route&&play.route.key,prevSecId=section&&JSON.stringify(section.ends);
+  S=s;
+  // routes: selected one as a tube, others as lines
+  if(!routeGroup){routeGroup=new THREE.Group();world.add(routeGroup);}clearGroup(routeGroup);
+  (s.routes||[]).forEach(function(r){if(r.key===s.selected){
+      var v=r.pts.map(function(p){return new THREE.Vector3(xOf(p[1]),hy(p[2])+.03,zOf(p[0]));});
+      var tube=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(v),Math.min(900,v.length*2),.07,6,false),
+        new THREE.MeshLambertMaterial({color:r.color,emissive:new THREE.Color(r.color).multiplyScalar(.3)}));routeGroup.add(tube);}
+    else routeGroup.add(lineFrom(r.pts,r.color,.55,.03));});
+  // real traverse
+  if(!travGroup){travGroup=new THREE.Group();world.add(travGroup);}clearGroup(travGroup);
+  document.getElementById('travWrap').style.display=s.traverse?'':'none';
+  (s.traverse||[]).forEach(function(seg){travGroup.add(lineFrom(seg,0xf2f2f2,.85,.04));});
+  travGroup.visible=document.getElementById('chkTrav').checked;
+  // pins
+  pins.forEach(function(p){overlay.remove(p);});pins=[];labels.forEach(function(l){l.el.remove();});labels=[];
+  var lab=document.getElementById('labels');
+  (s.pois||[]).forEach(function(p){var g=pin(p.lat,p.lon,0xd8cfe9,.19,{poi:p.id,name:p.name});g.userData.poi=p;pins.push(g);
+    var el=document.createElement('div');el.className='lbl';el.textContent=p.name.split(' (')[0];lab.appendChild(el);
+    labels.push({el:el,g:g,prio:p.priority});});
+  if(s.start){var a=pin(s.start[0],s.start[1],0x4f8f86,.24,{});pins.push(a);}
+  if(s.dest){var b=pin(s.dest[0],s.dest[1],0xc98b6b,.24,{});pins.push(b);}
+  Object.keys(play.reached||{}).forEach(markReached);
+  // selection marker
+  if(selMarker){overlay.remove(selMarker);selMarker=null;}
+  if(s.selection){selMarker=pin(s.selection[0],s.selection[1],0x7fb8ae,.16,{});selMarker.children[0].material=new THREE.MeshBasicMaterial({color:0x7fb8ae});
+    showSelection(s.selection[0],s.selection[1]);}
+  // cross-section curtain
+  section=s.section||null;buildSection();
+  var secId=section&&JSON.stringify(section.ends);if(secId!==prevSecId){scan=null;drawSection(1);}
+  // playback route
+  var r=(s.routes||[]).find(function(x){return x.key===s.selected;})||null;
+  if(!r||r.key!==prevRouteKey||!prevSel){setupPlayback(r);}
+  // navigation mode: the shared simulation clock drives the rover (rate in m/s, 0 when paused)
+  var wasActive=active;active=s.active!==false;
+  if(s.controlled&&play.route){var c=s.controlled;if(c.d<play.d-1){play.reached={};resetReached();}
+    play.d=Math.min(play.total,Math.max(0,c.d));play.rate=c.rate||0;play.on=play.rate>0;updateRover(true);
+    document.getElementById('navst').textContent=c.status+(c.rate?' · '+c.speed+'×':'');}
+  if(s.highlight!==undefined){pins.forEach(function(g){var p=g.userData.poi;if(!p)return;var on=p.id===s.highlight;g.userData.big=on?1.7:1;
+      if(on){g.userData.head.material.color.set(0xd9c39c);g.userData.head.material.emissive.set(0x4a3f2a);}});
+    labels.forEach(function(l){l.el.classList.toggle('hl',!!(l.g.userData.poi&&l.g.userData.poi.id===s.highlight));});
+    var hp=s.highlight&&(s.pois||[]).find(function(p){return p.id===s.highlight;});
+    if(hp&&s.highlight!==applyScene.hl&&active&&introDone&&!play.follow)flyTo(hp.lat,hp.lon,12);applyScene.hl=s.highlight;}
+  if(s.ui==='nav'){applyScene.fitted=true;
+    // every switch from the 2D map: start overhead like the satellite view, then descend onto the focus
+    // (the selected waypoint when there is one, otherwise the whole route)
+    if(active&&r&&(!introDone||!wasActive)){introDone=true;
+      var fp=s.highlight&&(s.pois||[]).find(function(p){return p.id===s.highlight;});
+      if(!reduce){orbit.az=.15;orbit.el=1.5;orbit.dist=fp?60:150;
+        if(fp)orbit.target.set(xOf(fp.lon),yAt(fp.lat,fp.lon),zOf(fp.lat));else orbit.target.set(0,0,0);}
+      if(fp){animCam({az:.35,el:.75,dist:12,target:new THREE.Vector3(xOf(fp.lon),yAt(fp.lat,fp.lon),zOf(fp.lat))},false,1800);}
+      else fitRoute(reduce?0:2200);}}
+  // first view: frame the selected route (or the whole region when there is none)
+  if(!applyScene.fitted&&r){applyScene.fitted=true;var xs=r.pts.map(function(q){return xOf(q[1]);}),zs=r.pts.map(function(q){return zOf(q[0]);});
+    var cx=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2,cz=(Math.min.apply(null,zs)+Math.max.apply(null,zs))/2,
+      ext=Math.max(Math.max.apply(null,xs)-Math.min.apply(null,xs),Math.max.apply(null,zs)-Math.min.apply(null,zs));
+    animCam({az:.5,el:.72,dist:ext*1.45+5,target:new THREE.Vector3(cx,yAt(latOf(cz),lonOf(cx)),cz)},false);}
+  // external focus (e.g. a discovery picked in another section)
+  if(s.focus&&s.focus.n!==focusN){focusN=s.focus.n;flyTo(s.focus.lat,s.focus.lon,16);}
+}
+
+function buildSection(){
+  if(!secGroup){secGroup=new THREE.Group();world.add(secGroup);}clearGroup(secGroup);
+  var panel=document.getElementById('section');
+  if(!section||!section.elev||section.elev.length<2){panel.style.display='none';return;}
+  panel.style.display='block';
+  var n=section.elev.length,pos=new Float32Array(n*6),bottom=hy(T.elev_lo)-.6,idx=[];
+  for(var i=0;i<n;i++){var x=xOf(section.lon[i]),z=zOf(section.lat[i]),y=hy(section.elev[i])+.02;
+    pos.set([x,y,z,x,bottom,z],i*6);if(i<n-1){var a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}}
+  var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setIndex(idx);
+  secGroup.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xb8a6e3,transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false})));
+  secGroup.add(lineFrom(section.lat.map(function(la,i){return[la,section.lon[i],section.elev[i]];}),0xb8a6e3,1,.05));
+}
+
+// ---------------------------------------------------------------- cross-section (2D, synced with 3D)
+var scanMarker=null;
+function drawSection(reveal01){
+  var cv=document.getElementById('secCanvas');if(!section||!section.elev)return;
+  var w=cv.clientWidth,h=cv.clientHeight,dpr=Math.min(window.devicePixelRatio||1,2);cv.width=w*dpr;cv.height=h*dpr;
+  var c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+  var D=section.d_km,Z=section.elev,n=Z.length,dmax=D[n-1],zmin=Math.min.apply(null,Z),zmax=Math.max.apply(null,Z);
+  var pad={l:44,r:8,t:8,b:26},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,span=Math.max(zmax-zmin,20);
+  function X(d){return pad.l+d/dmax*pw;} function Y(z){return pad.t+(1-(z-zmin)/span)*ph;}
+  c.strokeStyle='#2c3239';c.fillStyle='#6f7880';c.font='10px ui-monospace,monospace';c.lineWidth=1;
+  for(var g=0;g<=2;g++){var zz=zmin+span*g/2,yy=Y(zz);c.beginPath();c.moveTo(pad.l,yy);c.lineTo(w-pad.r,yy);c.stroke();
+    c.fillText(fmt(zz)+'',2,yy+3);}
+  c.fillText('elevation (m) · distance (km) →',pad.l,h-3);c.fillText(fmt(dmax,1)+' km',w-pad.r-40,h-3);
+  var m=Math.max(2,Math.round(n*reveal01));
+  // terrain-class band along the bottom
+  for(var i=0;i<m-1;i++){var it=T.legend['class'].find(function(q){return q[0]===section.cls[i];});c.fillStyle=it?it[2]:'#555';
+    c.fillRect(X(D[i]),pad.t+ph+3,Math.max(1,X(D[i+1])-X(D[i])+.5),5);}
+  c.beginPath();c.moveTo(X(D[0]),pad.t+ph);for(i=0;i<m;i++)c.lineTo(X(D[i]),Y(Z[i]));c.lineTo(X(D[m-1]),pad.t+ph);c.closePath();
+  var gr=c.createLinearGradient(0,pad.t,0,pad.t+ph);gr.addColorStop(0,'rgba(184,166,227,.45)');gr.addColorStop(1,'rgba(184,166,227,.05)');
+  c.fillStyle=gr;c.fill();c.beginPath();for(i=0;i<m;i++){if(i)c.lineTo(X(D[i]),Y(Z[i]));else c.moveTo(X(D[i]),Y(Z[i]));}
+  c.strokeStyle='#d6cbef';c.lineWidth=1.5;c.stroke();
+  (section.crossings||[]).forEach(function(q){if(q.d_km>D[m-1])return;var x=X(q.d_km),y=Y(q.elev);c.fillStyle='#d8cfe9';
+    c.beginPath();c.arc(x,y,3,0,7);c.fill();c.fillStyle='#e4e7ea';c.font='10px system-ui';c.fillText(q.name.split(' (')[0],Math.min(x+4,w-110),Math.max(y-5,10));});
+  var mid=X(dmax/2);c.strokeStyle='rgba(127,184,174,.6)';c.setLineDash([3,3]);c.beginPath();c.moveTo(mid,pad.t);c.lineTo(mid,pad.t+ph);c.stroke();c.setLineDash([]);
+  if(reveal01<1){var k=m-1,x2=X(D[k]);c.strokeStyle='#7fb8ae';c.beginPath();c.moveTo(x2,pad.t);c.lineTo(x2,pad.t+ph);c.stroke();
+    var it2=T.legend['class'].find(function(q){return q[0]===section.cls[k];});
+    document.getElementById('secRead').textContent=fmt(D[k],2)+' km · '+fmt(Z[k])+' m · slope '+fmt(section.slope[k],1)+'° · '+(it2?it2[1].split(' (')[0]:'');
+    placeScanMarker(section.lat[k],section.lon[k]);}
+  else{document.getElementById('secRead').textContent='Through the selected point (dashed), azimuth '+section.azimuth+'°, relief '+fmt(zmax-zmin)+' m. Surface only: no subsurface data.';
+    if(scanMarker)scanMarker.visible=false;}
+}
+function placeScanMarker(lat,lon){if(!scanMarker){scanMarker=new THREE.Mesh(new THREE.SphereGeometry(.22,14,10),new THREE.MeshBasicMaterial({color:0x7fb8ae}));
+  overlay.add(scanMarker);}scanMarker.visible=true;scanMarker.position.set(xOf(lon),yAt(lat,lon,.15),zOf(lat));}
+function startScan(){if(!section)return;scan={t0:performance.now(),dur:reduce?1:5200};}
+function stepScan(now){if(!scan)return;var t=Math.min(1,(now-scan.t0)/scan.dur);drawSection(t<1?Math.max(.01,t):1);if(t>=1)scan=null;}
+
+// ---------------------------------------------------------------- rover playback (SIMULATED)
+function setupPlayback(r){
+  play.route=r;play.on=false;play.d=0;play.reached={};document.getElementById('btnPlay').textContent='▶ Play';
+  var dis=!r;['btnPlay','btnRst','timeline','speed','chkFollow'].forEach(function(id){document.getElementById(id).disabled=dis;});
+  if(rover){overlay.remove(rover);rover=null;}if(trail){world.remove(trail);trail=null;}
+  if(!r){setHud('<b>No planned route.</b> Plan one (Route map or Exploration Routes) to play a simulated traverse.');return;}
+  play.total=r.pts[r.pts.length-1][3];
+  // catalogued features along this route, in driving order
+  play.stops=[];(S.pois||[]).forEach(function(p){var best=1e12,at=0;r.pts.forEach(function(q){var dx=(q[1]-p.lon)*T.kx*1000,dz=(q[0]-p.lat)*T.ky*1000,
+      dd=Math.sqrt(dx*dx+dz*dz);if(dd<best){best=dd;at=q[3];}});if(best<=S.visit_m)play.stops.push({id:p.id,name:p.name,at:at});});
+  play.stops.sort(function(a,b){return a.at-b.at;});
+  rover=new THREE.Group();var body=new THREE.Mesh(new THREE.BoxGeometry(.34,.14,.48),new THREE.MeshLambertMaterial({color:0xd9b48c}));
+  body.position.y=.12;rover.add(body);var mast=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.3,6),new THREE.MeshBasicMaterial({color:0xe4e7ea}));
+  mast.position.set(0,.33,.14);rover.add(mast);var ring=new THREE.Mesh(new THREE.RingGeometry(.32,.4,28),new THREE.MeshBasicMaterial({color:0xd9b48c,
+    transparent:true,opacity:.55,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.02;rover.add(ring);overlay.add(rover);
+  trailPos=new Float32Array((r.pts.length+1)*3);var tg=new THREE.BufferGeometry();tg.setAttribute('position',new THREE.BufferAttribute(trailPos,3));
+  trail=new THREE.Line(tg,new THREE.LineBasicMaterial({color:0xf3ead8}));world.add(trail);
+  updateRover(true);
+}
+function sample(d){var p=play.route.pts,lo=0,hi=p.length-1;if(d<=0)return{i:0,a:p[0],b:p[Math.min(1,hi)],k:0};
+  if(d>=p[hi][3])return{i:hi-1,a:p[hi-1],b:p[hi],k:1};while(hi-lo>1){var m=(lo+hi)>>1;if(p[m][3]<=d)lo=m;else hi=m;}
+  var a=p[lo],b=p[lo+1];return{i:lo,a:a,b:b,k:(d-a[3])/((b[3]-a[3])||1)};}
+function lerp(a,b,k){return a+(b-a)*k;}
+function updateRover(silent){
+  if(!play.route||!rover)return;var s=sample(play.d),a=s.a,b=s.b,k=s.k;
+  var lat=lerp(a[0],b[0],k),lon=lerp(a[1],b[1],k),el=lerp(a[2],b[2],k),sl=lerp(a[4],b[4],k);
+  rover.position.set(xOf(lon),(hy(el)+.02)*world.scale.y,zOf(lat));
+  rover.rotation.y=Math.atan2(xOf(b[1])-xOf(a[1]),zOf(b[0])-zOf(a[0]));
+  var p=play.route.pts,n=s.i+1;for(var i=0;i<n;i++){trailPos[i*3]=xOf(p[i][1]);trailPos[i*3+1]=hy(p[i][2])+.05;trailPos[i*3+2]=zOf(p[i][0]);}
+  trailPos[n*3]=xOf(lon);trailPos[n*3+1]=hy(el)+.05;trailPos[n*3+2]=zOf(lat);trail.geometry.setDrawRange(0,n+1);trail.geometry.attributes.position.needsUpdate=true;
+  var nxt=null;play.stops.forEach(function(st){if(play.d>=st.at-1){if(!play.reached[st.id]){play.reached[st.id]=1;markReached(st.id);
+      if(!silent)toast('Reached '+st.name.split(' (')[0]+' · sol '+fmt(st.at/S.pace,1)+' (simulated)');}}else if(!nxt)nxt=st;});
+  document.getElementById('timeline').value=Math.round(play.d/(play.total||1)*1000);
+  setHud('<span>Route <b>'+esc(play.route.key)+'</b> '+esc(play.route.name)+'</span><span>Driven <b>'+fmt(play.d/1000,2)+' / '+fmt(play.total/1000,2)+' km</b></span>'+
+    '<span>Sol <b>'+fmt(play.d/S.pace,1)+'</b> at '+fmt(S.pace)+' m/sol</span><span>Elevation <b>'+fmt(el)+' m</b></span><span>Slope <b>'+fmt(sl,1)+'°</b></span>'+
+    '<span>Position <b class="mono">'+lat.toFixed(4)+'° N '+lon.toFixed(4)+'° E</b></span>'+
+    '<span>Next feature <b>'+(nxt?esc(nxt.name.split(' (')[0])+' in '+fmt((nxt.at-play.d)/1000,2)+' km':(play.d>=play.total?'destination reached':'none ahead'))+'</b></span>'+
+    '<span>Features passed <b>'+Object.keys(play.reached).length+' / '+play.stops.length+'</b></span>');
+  if(play.follow){orbit.target.lerp(new THREE.Vector3(rover.position.x,rover.position.y,rover.position.z),.08);
+    var want=-rover.rotation.y+Math.PI;var dAz=Math.atan2(Math.sin(want-orbit.az),Math.cos(want-orbit.az));orbit.az+=dAz*.03;}
+}
+function markReached(id){pins.forEach(function(g){if(g.userData.poi&&g.userData.poi.id===id){g.userData.pulse=performance.now();
+  g.userData.head.material.color.set(0x7fb8ae);g.userData.head.material.emissive.set(0x1f3a36);}});
+  labels.forEach(function(l){if(l.g.userData.poi&&l.g.userData.poi.id===id)l.el.classList.add('reached');});}
+function resetReached(){pins.forEach(function(g){if(g.userData.poi){g.userData.head.material.color.set(0xd8cfe9);g.userData.head.material.emissive.set(0x36333a);}});
+  labels.forEach(function(l){l.el.classList.remove('reached');});}
+function setHud(h){document.getElementById('hud').innerHTML='<span id="simlabel">SIMULATED · illustrative playback along the planned route, not mission telemetry</span>'+h;}
+function stepPlay(dt){if(!play.on||!play.route)return;play.d=Math.min(play.total,play.d+dt*(S.controlled?play.rate:play.speed*S.pace));updateRover(false);
+  if(play.d>=play.total){play.on=false;document.getElementById('btnPlay').textContent='▶ Play';toast('Destination reached (simulated playback)');}}
+
+// ---------------------------------------------------------------- camera
+function fitRoute(dur){var r=play.route;if(!r)return false;var xs=r.pts.map(function(q){return xOf(q[1]);}),zs=r.pts.map(function(q){return zOf(q[0]);});
+  var cx=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2,cz=(Math.min.apply(null,zs)+Math.max.apply(null,zs))/2,
+    ext=Math.max(Math.max.apply(null,xs)-Math.min.apply(null,xs),Math.max.apply(null,zs)-Math.min.apply(null,zs));
+  animCam({az:.5,el:.72,dist:ext*1.45+5,target:new THREE.Vector3(cx,yAt(latOf(cz),lonOf(cx)),cz)},dur===0,dur);return true;}
+function resetView(instant){var d=Math.max((xMax()-xMin()),(T.ny-1)*Math.abs(T.dlat)*T.ky);
+  animCam({az:.55,el:.9,dist:d*1.15,target:new THREE.Vector3(0,0,0)},instant);}
+function animCam(to,instant,dur){if(instant||reduce){orbit.az=to.az;orbit.el=to.el;orbit.dist=to.dist;orbit.target.copy(to.target);camAnim=null;return;}
+  camAnim={t0:performance.now(),dur:dur||1100,from:{az:orbit.az,el:orbit.el,dist:orbit.dist,target:orbit.target.clone()},to:to};}
+function stepCam(now){if(!camAnim)return;var t=Math.min(1,(now-camAnim.t0)/camAnim.dur),e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,f=camAnim.from,to=camAnim.to;
+  orbit.az=f.az+(to.az-f.az)*e;orbit.el=f.el+(to.el-f.el)*e;orbit.dist=f.dist+(to.dist-f.dist)*e;orbit.target.lerpVectors(f.target,to.target,e);if(t>=1)camAnim=null;}
+function flyTo(lat,lon,dist){animCam({az:orbit.az,el:Math.max(.6,orbit.el),dist:dist,target:new THREE.Vector3(xOf(lon),yAt(lat,lon),zOf(lat))});}
+function placeCam(){var t=orbit.target,ce=Math.cos(orbit.el);camera.position.set(t.x+orbit.dist*ce*Math.sin(orbit.az),t.y+orbit.dist*Math.sin(orbit.el),
+  t.z+orbit.dist*ce*Math.cos(orbit.az));camera.lookAt(t);}
+
+// ---------------------------------------------------------------- picking & readouts
+var ray=null,mouse=null;
+function pick(ev,objs){var r=renderer.domElement.getBoundingClientRect();mouse.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(mouse,camera);return ray.intersectObjects(objs,true)[0];}
+function readout(lat,lon){var k=idxAt(lat,lon);if(k<0)return null;var cl=T.legend['class'].find(function(c){return c[0]===CL[k];}),g=GEO[k];
+  return{lat:lat,lon:lon,elev:elevAt(lat,lon),slope:SL[k],cls:cl?cl[1].split(' (')[0]:'',sci:SC[k],geo:g?T.legend.geology[g-1][1]:'not catalogued'};}
+function rowsHtml(r){return '<span class="mono">'+r.lat.toFixed(4)+'° N, '+r.lon.toFixed(4)+'° E</span><br>'+
+  '<span class="k">Elevation</span> '+fmt(r.elev)+' m '+tagHtml('real')+'<br><span class="k">Slope</span> '+r.slope+'° · '+esc(r.cls)+' '+tagHtml('derived')+
+  '<br><span class="k">Science value</span> '+r.sci+'/100 '+tagHtml('derived')+'<br><span class="k">Catalogued feature zone</span> '+esc(r.geo);}
+function showSelection(lat,lon){var r=readout(lat,lon);if(!r)return;document.getElementById('sel').innerHTML='<h4 style="margin-top:2px">Selected</h4>'+rowsHtml(r)+
+  '<br><span class="k">Science, charts and the Assistant now use this point.</span>';}
+
+// ---------------------------------------------------------------- UI bindings
+function bindUI(){
+  var drag=null,moved=0,lastHover=0;
+  var el=renderer.domElement;el.addEventListener('contextmenu',function(e){e.preventDefault();});
+  el.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY,pan:e.button===2||e.shiftKey};moved=0;el.setPointerCapture(e.pointerId);camAnim=null;});
+  el.addEventListener('pointermove',function(e){
+    if(drag){var dx=e.clientX-drag.x,dy=e.clientY-drag.y;moved+=Math.abs(dx)+Math.abs(dy);drag.x=e.clientX;drag.y=e.clientY;
+      if(drag.pan){var s=orbit.dist*.0016,ca=Math.cos(orbit.az),sa=Math.sin(orbit.az);orbit.target.x-=(dx*ca-dy*sa)*s;orbit.target.z-=(-dx*sa-dy*ca)*s;}
+      else{orbit.az-=dx*.006;orbit.el=Math.max(.12,Math.min(1.53,orbit.el+dy*.005));}return;}
+    var now=performance.now();if(now-lastHover<60||!terrainMesh)return;lastHover=now;var h=pick(e,[terrainMesh]);
+    if(h){var r=readout(latOf(h.point.z),lonOf(h.point.x));if(r)document.getElementById('hover').innerHTML=rowsHtml(r);}});
+  el.addEventListener('pointerup',function(e){var wasPan=drag&&drag.pan;drag=null;if(moved>5||wasPan||!terrainMesh)return;
+    var hp=pick(e,pins.map(function(p){return p.userData.head;}));
+    if(hp&&hp.object.userData.poi){var pp=pins.find(function(p){return p.userData.head===hp.object;}).userData.poi;
+      setValue({type:'poi',id:pp.id,n:Date.now()});toast(pp.name.split(' (')[0]+' selected');return;}
+    var h=pick(e,[terrainMesh]);if(!h)return;var lat=latOf(h.point.z),lon=lonOf(h.point.x);
+    if(selMarker)overlay.remove(selMarker);selMarker=pin(lat,lon,0x7fb8ae,.16,{});showSelection(lat,lon);
+    setValue({type:'select',lat:+lat.toFixed(5),lon:+lon.toFixed(5),n:Date.now()});});
+  el.addEventListener('wheel',function(e){e.preventDefault();camAnim=null;orbit.dist=Math.max(2.5,Math.min(160,orbit.dist*Math.pow(1.0015,e.deltaY)));},{passive:false});
+  wrap.addEventListener('keydown',function(e){var k=e.key,used=true;if(k==='ArrowLeft')orbit.az+=.08;else if(k==='ArrowRight')orbit.az-=.08;
+    else if(k==='ArrowUp')orbit.el=Math.min(1.53,orbit.el+.05);else if(k==='ArrowDown')orbit.el=Math.max(.12,orbit.el-.05);
+    else if(k==='+'||k==='=')orbit.dist=Math.max(2.5,orbit.dist*.9);else if(k==='-')orbit.dist=Math.min(160,orbit.dist*1.1);
+    else if(k===' '&&play.route){togglePlay();}else used=false;if(used)e.preventDefault();});
+  document.getElementById('btnReset').onclick=function(){play.follow=false;document.getElementById('chkFollow').checked=false;document.getElementById('chkFollowNav').checked=false;if(!fitRoute())resetView();};
+  document.getElementById('btnWhole').onclick=function(){play.follow=false;document.getElementById('chkFollow').checked=false;document.getElementById('chkFollowNav').checked=false;resetView();};
+  document.getElementById('btnTop').onclick=function(){animCam({az:0,el:1.53,dist:orbit.dist,target:orbit.target.clone()});};
+  document.getElementById('btnReveal').onclick=function(){startReveal();};
+  document.getElementById('btnTour').onclick=function(){tour?stopTour():startTour();};
+  document.getElementById('btnCompare').onclick=function(){stopTour();setCompare(!compare);};
+  document.getElementById('modeB').onchange=function(e){modeB=e.target.value;recolor(true);};
+  document.getElementById('split').oninput=function(e){split=e.target.value/1000;colors.set(targetColors());terrainGeo.attributes.color.needsUpdate=true;updateSplitPlane();};
+  document.getElementById('btnSweep').onclick=startSweep;
+  document.getElementById('exag').oninput=function(e){exag=+e.target.value;document.getElementById('exagv').textContent=exag;reveal=null;world.scale.y=exag;updateSplitPlane();};
+  document.getElementById('chkLabels').onchange=function(){};
+  document.getElementById('chkTrav').onchange=function(e){if(travGroup)travGroup.visible=e.target.checked;};
+  document.getElementById('btnPlay').onclick=togglePlay;
+  document.getElementById('btnRst').onclick=function(){play.on=false;play.d=0;play.reached={};resetReached();document.getElementById('btnPlay').textContent='▶ Play';updateRover(true);};
+  document.getElementById('speed').onchange=function(e){play.speed=+e.target.value;};
+  document.getElementById('timeline').oninput=function(e){if(!play.route)return;play.on=false;document.getElementById('btnPlay').textContent='▶ Play';
+    var nd=e.target.value/1000*play.total;if(nd<play.d){play.reached={};resetReached();}play.d=nd;updateRover(true);};
+  document.getElementById('chkFollow').onchange=function(e){play.follow=e.target.checked;if(play.follow&&rover)animCam({az:orbit.az,el:.55,dist:7,target:rover.position.clone()});};
+  document.getElementById('btnScan').onclick=startScan;
+  document.getElementById('chkFollowNav').onchange=function(e){play.follow=e.target.checked;if(play.follow&&rover)animCam({az:orbit.az,el:.55,dist:7,target:rover.position.clone()});};
+  document.getElementById('btnMin').onclick=function(){var L=document.getElementById('left'),m=L.classList.toggle('min');this.textContent=m?'+':'–';this.setAttribute('aria-expanded',m?'false':'true');};
+  window.addEventListener('resize',resize);
+}
+function togglePlay(){if(!play.route)return;if(play.d>=play.total){play.d=0;play.reached={};resetReached();}play.on=!play.on;
+  document.getElementById('btnPlay').textContent=play.on?'⏸ Pause':'▶ Play';if(play.on)toast('Simulated playback: 1 second = '+play.speed+' sol(s) at '+S.pace+' m/sol');}
+function resize(){if(!renderer)return;var w=wrap.clientWidth,h=wrap.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();
+  if(section)drawSection(scan?.5:1);}
+
+// ---------------------------------------------------------------- main loop
+var lastT=performance.now();
+function loop(now){requestAnimationFrame(loop);if(!T)return;var dt=Math.min(.1,(now-lastT)/1000);lastT=now;
+  stepColor(now);stepSweep(now);stepTour(now);stepReveal(now);stepCam(now);stepScan(now);stepPlay(dt);
+  if(rover){var s=sample(play.d);rover.position.y=(hy(lerp(s.a[2],s.b[2],s.k))+.02)*world.scale.y;}
+  overlay.children.forEach(function(g){var d=g.userData;if(!d||!d.head)return;g.position.set(xOf(d.lon),yAt(d.lat,d.lon),zOf(d.lat));
+    var sc=1;if(d.pulse){var t=(now-d.pulse)/1600;if(t<1)sc=1+.9*Math.sin(t*Math.PI);else d.pulse=0;}d.head.scale.setScalar(sc*(d.big||1));});
+  if(!active)return;
+  placeCam();renderer.render(scene3,camera);
+  var show=document.getElementById('chkLabels').checked,w=wrap.clientWidth,h=wrap.clientHeight,v=new THREE.Vector3();
+  labels.forEach(function(l){if(!show){l.el.style.display='none';return;}var p=l.g.position;v.set(p.x,p.y+1.2,p.z).project(camera);
+    var vis=v.z<1&&Math.abs(v.x)<1.05&&Math.abs(v.y)<1.05&&(orbit.dist<30||l.prio>=.7);
+    l.el.style.display=vis?'block':'none';if(vis){l.el.style.left=((v.x+1)/2*w)+'px';l.el.style.top=((1-v.y)/2*h)+'px';}});
+}
+})();
+</script>
+</body></html>
